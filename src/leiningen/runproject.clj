@@ -50,26 +50,37 @@
   [deps project]
   (update-in project [:dependencies] (comp vec concat) deps))
 
-(defn extract-project [jarfile]
+(defn extract-project
+  "Extract project.clj from jarfile, and read it as a project."
+  [jarfile]
   (with-open [z (java.util.zip.ZipFile. jarfile)]
     (let [tmpfile (java.io.File/createTempFile "project" ".clj")
           entry (.getEntry z "project.clj")
           project-data (-> z
                            (.getInputStream entry)
                            (clojure.java.io/copy tmpfile))]
-      (lein-project/read (.getCanonicalPath tmpfile)))))
+      (try (lein-project/read (.getCanonicalPath tmpfile))
+           (finally 
+             (.delete tmpfile))))))
 
 (defn ^:no-project-needed runproject
+  "Launch a project's 'main' directly from the repository.
+   Ignores the current directory's project if there is one.
+   Usage:
 
-  [project & args]
-  
-  (println args)
-  (let [deps (if (second args)
-               [(first args) (second args)]
-               [(first args)])
-        p (-> (lein-cp/dependency-hierarchy :dependencies {:dependencies (->dep-pairs deps)})
-              keys first meta :file extract-project)
-        project (or project p)]
-    (println project)
-    (lein-eval/eval-in-project project `(do (require '~(:main project))
-                                            (apply (ns-resolve '~(:main project) '~'-main) args)))))
+    lein runproject com.foocorp/foo-tool 0.2.1
+    lein runproject com.foocorp/foo-tool # This uses the most recent version."
+  [_ & args]
+  (let [deps (->dep-pairs (if (second args)
+                            [(first args) (second args)]
+                            [(first args)]))
+        fake-project {:dependencies deps}]
+    (lein-cp/resolve-dependencies :dependencies fake-project :add-classpath? true)
+    (let [project (-> (lein-cp/dependency-hierarchy :dependencies fake-project)
+                      keys first meta :file extract-project
+                      (update-in [:dependencies] concat deps)
+                      (dissoc :source-paths :java-source-paths :test-paths :resource-paths))]
+      (if-let [main (:main project)]
+        (lein-eval/eval-in-project project `(do (require '~main)
+                                                (apply (ns-resolve '~main '~'-main) (quote ~args))))
+        (throw (IllegalArgumentException. "Project does not specify a :main namespace to run."))))))
