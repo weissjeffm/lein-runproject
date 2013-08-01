@@ -1,4 +1,4 @@
-(defproject lein-runproject "0.1.1"
+(defproject lein-runproject "0.1.2"
   :description "Run a leiningen project without checking it out or downloading a jar."
   :url "https://github.com/weissjeffm/lein-runproject"
   :license {:name "Eclipse Public License"

@@ -63,14 +63,10 @@
     lein runproject com.foocorp/foo-tool 0.2.1 arg1 arg2 arg3 ...
 
     # This uses the most recent version (not including snapshots).
-    lein runproject com.foocorp/foo-tool arg1 arg2 arg3 ...
-
-    Note that the working directory user.dir for the program will be
-    the system temp dir, /tmp in Linux for example."
+    lein runproject com.foocorp/foo-tool LATEST arg1 arg2 arg3 ..."
+  
   [_ & args]
-  (let [deps (->dep-pairs (if (second args)
-                            [(first args) (second args)]
-                            [(first args)]))
+  (let [deps (->dep-pairs [(first args) (second args)])
         fake-project (lein-project/make {:dependencies deps})]
     (lein-cp/resolve-dependencies :dependencies fake-project :add-classpath? true)
     (let [project (-> (lein-cp/dependency-hierarchy :dependencies fake-project)
@@ -80,5 +76,5 @@
                       (dissoc :source-paths :java-source-paths :test-paths :resource-paths))]
       (if-let [main (:main project)]
         (lein-eval/eval-in-project project `(do (require '~main)
-                                                (apply (ns-resolve '~main '~'-main) (quote ~args))))
+                                                (apply (ns-resolve '~main '~'-main) (quote ~(drop 2 args)))))
         (throw (IllegalArgumentException. "Project does not specify a :main namespace to run."))))))
