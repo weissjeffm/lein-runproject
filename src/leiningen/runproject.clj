@@ -4,6 +4,9 @@
             [leiningen.core.project :as lein-project]
             [clojure.edn :as edn]))
 
+;; Following function written by https://github.com/rkneufeld
+;; taken from https://github.com/rkneufeld/lein-try
+
 (defn- version-string?
   "Check if a given String represents a version number."
   [^String s]
@@ -39,27 +42,16 @@
         (map #(clojure.string/replace % #"\[|\]" ""))
         lazy-convert))))
 
-(defn- resolve-try-deps!
-  "Resolve newly-added try-dependencies, adding them to classpath."
-  [project]
-  ;; TODO: I don't think this resolves the full hierarchy of dependencies
-  (lein-cp/resolve-dependencies :dependencies project :add-classpath? true))
-
-(defn- add-try-deps
-  "Add list of try-dependencies to project."
-  [deps project]
-  (update-in project [:dependencies] (comp vec concat) deps))
-
 (defn extract-project
   "Extract project.clj from jarfile, and read it as a project."
   [jarfile]
   (with-open [z (java.util.zip.ZipFile. jarfile)]
     (let [tmpfile (java.io.File/createTempFile "project" ".clj")
-          entry (.getEntry z "project.clj")
-          project-data (-> z
-                           (.getInputStream entry)
-                           (clojure.java.io/copy tmpfile))]
-      (try (lein-project/read (.getCanonicalPath tmpfile))
+          entry (.getEntry z "project.clj")]
+      (try (-> z
+               (.getInputStream entry)
+               (clojure.java.io/copy tmpfile))
+           (lein-project/read (.getCanonicalPath tmpfile))
            (finally 
              (.delete tmpfile))))))
 
@@ -68,14 +60,16 @@
    Ignores the current directory's project if there is one.
    Usage:
 
-    lein runproject com.foocorp/foo-tool 0.2.1
-    lein runproject com.foocorp/foo-tool # This uses the most recent version."
+    lein runproject com.foocorp/foo-tool 0.2.1 arg1 arg2 arg3 ...
+
+    # This uses the most recent version (not including snapshots).
+    lein runproject com.foocorp/foo-tool arg1 arg2 arg3 ... "
   [_ & args]
   (let [deps (->dep-pairs (if (second args)
                             [(first args) (second args)]
                             [(first args)]))
-        fake-project {:dependencies deps}]
-    (lein-cp/resolve-dependencies :dependencies fake-project :add-classpath? true)
+        fake-project (lein-project/make {:dependencies deps})]
+    (println (lein-cp/resolve-dependencies :dependencies fake-project :add-classpath? true))
     (let [project (-> (lein-cp/dependency-hierarchy :dependencies fake-project)
                       keys first meta :file extract-project
                       (update-in [:dependencies] concat deps)
