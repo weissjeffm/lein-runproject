@@ -9,7 +9,7 @@ A [Leiningen](https://github.com/technomancy/leiningen) plugin for running a lei
 Put the following into the `:plugins` vector of the `:user` profile in your `~/.lein/profiles.clj`:
 
 ```clojure
-[lein-runproject "0.1.0"]
+[lein-runproject "0.1.1"]
 ```
 #### Command Line
 

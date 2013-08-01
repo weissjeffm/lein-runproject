@@ -63,7 +63,10 @@
     lein runproject com.foocorp/foo-tool 0.2.1 arg1 arg2 arg3 ...
 
     # This uses the most recent version (not including snapshots).
-    lein runproject com.foocorp/foo-tool arg1 arg2 arg3 ... "
+    lein runproject com.foocorp/foo-tool arg1 arg2 arg3 ...
+
+    Note that the working directory user.dir for the program will be
+    the system temp dir, /tmp in Linux for example."
   [_ & args]
   (let [deps (->dep-pairs (if (second args)
                             [(first args) (second args)]
@@ -73,6 +76,7 @@
     (let [project (-> (lein-cp/dependency-hierarchy :dependencies fake-project)
                       keys first meta :file extract-project
                       (update-in [:dependencies] concat deps)
+                      (assoc :root (System/getProperty "user.dir"))
                       (dissoc :source-paths :java-source-paths :test-paths :resource-paths))]
       (if-let [main (:main project)]
         (lein-eval/eval-in-project project `(do (require '~main)
