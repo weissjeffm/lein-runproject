@@ -4,7 +4,7 @@
             [leiningen.core.project :as lein-project]
             [clojure.edn :as edn]))
 
-;; Following function written by https://github.com/rkneufeld
+;; Following 2 functions written by https://github.com/rkneufeld
 ;; taken from https://github.com/rkneufeld/lein-try
 
 (defn- version-string?
@@ -56,7 +56,7 @@
              (.delete tmpfile))))))
 
 (defn ^:no-project-needed runproject
-  "Launch a project's 'main' directly from the repository.
+  "Run any project's -main function directly from the repository.
    Ignores the current directory's project if there is one.
    Usage:
 
@@ -69,7 +69,7 @@
                             [(first args) (second args)]
                             [(first args)]))
         fake-project (lein-project/make {:dependencies deps})]
-    (println (lein-cp/resolve-dependencies :dependencies fake-project :add-classpath? true))
+    (lein-cp/resolve-dependencies :dependencies fake-project :add-classpath? true)
     (let [project (-> (lein-cp/dependency-hierarchy :dependencies fake-project)
                       keys first meta :file extract-project
                       (update-in [:dependencies] concat deps)
