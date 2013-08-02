@@ -9,24 +9,21 @@ A [Leiningen](https://github.com/technomancy/leiningen) plugin for running a lei
 Put the following into the `:plugins` vector of the `:user` profile in your `~/.lein/profiles.clj`:
 
 ```clojure
-[lein-runproject "0.1.1"]
+[lein-runproject "LATEST"] 
 ```
 #### Command Line
 
 You can use `lein-runproject` run any project, any version that exists in your profile's repositories.
 
 ```bash
-$ lein runproject fooproj 0.5.1 arg1 arg2
+$ lein runproject fooproj 0.5.1 arg1 arg2 ...
 Fetching dependencies... (takes a while the first time)
 
 [Program output]
 
-```
-
-You can even leave off the version number and leiningen will pull the most recently released version!
-
-```bash
-$ lein runproject fooproj arg1 arg2
+# or if you don't care what version
+$ lein runproject fooproj LATEST arg1 arg2 ...
+Fetching dependencies... (takes a while the first time)
 
 [Program output]
 
