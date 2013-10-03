@@ -11,6 +11,12 @@ Put the following into the `:plugins` vector of the `:user` profile in your `~/.
 ```clojure
 [lein-runproject "LATEST"] 
 ```
+
+##### Example
+
+```clojure
+{:user {:plugins [[lein-runproject "LATEST"]]}}
+```
 #### Command Line
 
 You can use `lein-runproject` run any project, any version that exists in your profile's repositories.
