@@ -67,7 +67,11 @@
   
   [_ & args]
   (let [deps (->dep-pairs [(first args) (second args)])
-        fake-project (lein-project/make {:dependencies deps})]
+        fake-project (lein-project/make {:dependencies deps
+                                         :repositories ^:replace [["clojars" {:url "http://clojars.org/repo"
+                                                                              :snapshots {:update :always}}]
+                                                                  ["central" {:url "http://repo1.maven.org/maven2"
+                                                                              :snapshots false}]]})]
     (lein-cp/resolve-dependencies :dependencies fake-project :add-classpath? true)
     (let [project (-> (lein-cp/dependency-hierarchy :dependencies fake-project)
                       keys first meta :file extract-project
